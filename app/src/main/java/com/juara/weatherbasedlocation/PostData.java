@@ -9,10 +9,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -48,6 +52,7 @@ public class PostData extends AppCompatActivity {
     EditText txtLatitude,txtLongitude;
     Button btnSend;
     RecyclerView rv ;
+    ImageButton btnFolder;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,12 +62,21 @@ public class PostData extends AppCompatActivity {
 
         btnCapture = findViewById(R.id.btnCapture);
         imgFoto = findViewById(R.id.imgCamera);
+        btnFolder = findViewById(R.id.btnFolder);
 
 
         btnCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 openCamera();
+            }
+        });
+
+
+        btnFolder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openFolder();
             }
         });
 
@@ -209,16 +223,7 @@ public class PostData extends AppCompatActivity {
     }
 
 
-    private int CAMERA_REQUEST = 100;
-    void openCamera() {
 
-
-
-            Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-
-            startActivityForResult(cameraIntent, CAMERA_REQUEST);
-
-    }
 
     Bitmap bitmap;
     byte[] byteArray;
@@ -230,17 +235,42 @@ public class PostData extends AppCompatActivity {
             bitmap = (Bitmap) data.getExtras().get("data");
 
 
-
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
             byteArray = baos.toByteArray();
             imgFoto.setImageBitmap(bitmap);
 
 
+        }else if(requestCode == REQUEST_GALLERY && resultCode == Activity.RESULT_OK){
+            Uri selectedImage = data.getData();
+
+            imgFoto.setImageURI(selectedImage);
+            Bitmap bitmap = ((BitmapDrawable) imgFoto.getDrawable()).getBitmap();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byteArray = baos.toByteArray();
+
         }
     }
 
+    private int CAMERA_REQUEST = 100;
+    private int REQUEST_GALLERY = 200;
+    void openCamera() {
 
+
+
+        Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
+        startActivityForResult(cameraIntent, CAMERA_REQUEST);
+
+    }
+
+    public void openFolder(){
+        Intent galleryIntent = new Intent(
+                Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(galleryIntent , REQUEST_GALLERY );
+    }
 
 
 
