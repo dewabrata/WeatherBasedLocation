@@ -60,7 +60,7 @@ public class AdapterListSimple extends RecyclerView.Adapter<AdapterListSimple.Vi
 
         holder.txtTanggal.setText(data.get(position).getDatetime());
 
-        String image = "http://dewabrata.com/dewa/uploads/geolocation/"+ data.get(position).getPhoto();
+        String image =  data.get(position).getPhoto();
         Picasso.get().load(image).into(holder.image);
 
 

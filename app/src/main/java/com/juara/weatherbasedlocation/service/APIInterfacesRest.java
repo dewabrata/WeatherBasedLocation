@@ -15,11 +15,15 @@ import com.juara.weatherbasedlocation.model.WeatherModel;
 import com.juara.weatherbasedlocation.model.geolocation.GeolocationModel;
 import com.juara.weatherbasedlocation.model.postresult.PostResult;
 
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Query;
 
 /**
@@ -35,6 +39,17 @@ public interface APIInterfacesRest {
  @POST("geolocation/add")
  Call<PostResult> postDataGeo(@Field("latitude") String lat, @Field("longitude") String lon, @Field("datetime") String datetime, @Field("photo") String photo);
 
+
+    @Multipart
+    @POST("geolocation/add")
+    Call<PostResult> postDataGeoWithPhoto(
+
+            @Part("latitude") RequestBody latitude,
+            @Part("longitude") RequestBody lon,
+            @Part("datetime") RequestBody datetime,
+            @Part MultipartBody.Part img1
+
+    );
 
     @GET("geolocation/all")
     Call<GeolocationModel> getGeolocation();

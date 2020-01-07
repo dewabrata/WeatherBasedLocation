@@ -1,15 +1,23 @@
 package com.juara.weatherbasedlocation;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.juara.weatherbasedlocation.adapter.AdapterListSimple;
@@ -21,14 +29,22 @@ import com.juara.weatherbasedlocation.service.APIInterfacesRest;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class PostData extends AppCompatActivity {
 
+    ImageView imgFoto;
+    ImageButton btnCapture;
     EditText txtLatitude,txtLongitude;
     Button btnSend;
     RecyclerView rv ;
@@ -39,6 +55,18 @@ public class PostData extends AppCompatActivity {
 
         rv = findViewById(R.id.lstGeolocation);
 
+        btnCapture = findViewById(R.id.btnCapture);
+        imgFoto = findViewById(R.id.imgCamera);
+
+
+        btnCapture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openCamera();
+            }
+        });
+
+
         txtLatitude = findViewById(R.id.txtLatitude);
         txtLongitude = findViewById(R.id.txtLongitude);
         btnSend = findViewById(R.id.btnSend);
@@ -47,7 +75,12 @@ public class PostData extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                postGeolocation(txtLatitude.getText().toString(),txtLongitude.getText().toString(),(new Date()).toString(),"test");
+
+                String pattern = "yyyy-MM-dd";
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
+                String date = simpleDateFormat.format(new Date());
+                postGeolocation(txtLatitude.getText().toString(),txtLongitude.getText().toString(),date,"test");
             }
         });
 
@@ -111,14 +144,29 @@ public class PostData extends AppCompatActivity {
     }
 
 
+    public RequestBody toRequestBody(String value) {
+        if (value==null){
+            value="";
+        }
+        RequestBody body = RequestBody.create(MediaType.parse("text/plain"), value);
+        return body;
+    }
 
     public void postGeolocation(String lat,String lon,String datetime, String photo){
+
+
+
+        RequestBody requestFile1 = RequestBody.create(MediaType.parse("image/jpeg"),byteArray);
+
+        MultipartBody.Part bodyImg1 = MultipartBody.Part.createFormData("photo", "dewa.png", requestFile1);
+
+
 
         apiInterface = APIClient.getClient().create(APIInterfacesRest.class);
         progressDialog = new ProgressDialog(PostData.this);
         progressDialog.setTitle("Loading");
         progressDialog.show();
-        Call<PostResult> call3 = apiInterface.postDataGeo(lat,lon,datetime,photo);
+        Call<PostResult> call3 = apiInterface.postDataGeoWithPhoto(toRequestBody(lat),toRequestBody(lon),toRequestBody(datetime),bodyImg1);
         call3.enqueue(new Callback<PostResult>() {
             @Override
             public void onResponse(Call<PostResult> call, Response<PostResult> response) {
@@ -159,5 +207,41 @@ public class PostData extends AppCompatActivity {
 
 
     }
+
+
+    private int CAMERA_REQUEST = 100;
+    void openCamera() {
+
+
+
+            Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
+            startActivityForResult(cameraIntent, CAMERA_REQUEST);
+
+    }
+
+    Bitmap bitmap;
+    byte[] byteArray;
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+            bitmap = (Bitmap) data.getExtras().get("data");
+
+
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+            byteArray = baos.toByteArray();
+            imgFoto.setImageBitmap(bitmap);
+
+
+        }
+    }
+
+
+
+
 
 }
